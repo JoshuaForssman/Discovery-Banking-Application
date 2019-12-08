@@ -1,0 +1,14 @@
+com/discovery/banking/entity/AtmAllocation.class
+com/discovery/banking/entity/Denomination.class
+com/discovery/banking/entity/ClientSubType.class
+com/discovery/banking/entity/ClientType.class
+com/discovery/banking/entity/ClientAccount.class
+com/discovery/banking/entity/DenominationType.class
+com/discovery/banking/entity/CreditCardLimit.class
+com/discovery/banking/entity/CurrencyConversionRate.class
+com/discovery/banking/entity/AccountType.class
+com/discovery/banking/entity/CurrencyIdentity.class
+com/discovery/banking/entity/Atm.class
+com/discovery/banking/entity/Client.class
+com/discovery/banking/BankingApplication.class
+com/discovery/banking/entity/Currency.class

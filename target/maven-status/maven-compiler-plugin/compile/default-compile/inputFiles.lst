@@ -1,0 +1,14 @@
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/Atm.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/Currency.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/Client.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/ClientAccount.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/AtmAllocation.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/Denomination.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/AccountType.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/ClientSubType.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/ClientType.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/DenominationType.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/CreditCardLimit.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/CurrencyIdentity.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/BankingApplication.java
+/home/joshua/Desktop/Joshua/MyStuff/Test/Discovery/Discovery-Banking-Application/src/main/java/com/discovery/banking/entity/CurrencyConversionRate.java
