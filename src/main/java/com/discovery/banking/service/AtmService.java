@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -19,13 +20,8 @@ public class AtmService {
     public List<AtmAllocation> retrieveAtmAllocations(int atmId){
 
         Atm atm = atmRepository.getOne(atmId);
-
         //retrieves the atm allocations for the specified atm
         List<AtmAllocation> atmAllocations= atm.getAtmAllocations();
-
-        for (AtmAllocation allocation: atmAllocations) {
-
-        }
 
         return atmAllocations;
     }

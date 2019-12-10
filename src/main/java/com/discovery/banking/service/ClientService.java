@@ -1,20 +1,24 @@
 package com.discovery.banking.service;
 
+import com.discovery.banking.dao.ClientAccountRepository;
 import com.discovery.banking.dao.ClientRepository;
 import com.discovery.banking.entity.AccountTypeCodeOptions;
 import com.discovery.banking.entity.Atm;
 import com.discovery.banking.entity.AtmAllocation;
 import com.discovery.banking.entity.Client;
 import com.discovery.banking.entity.ClientAccount;
+import com.discovery.banking.entity.Currency;
 import com.discovery.banking.entity.Denomination;
 import com.discovery.banking.utils.CurrencyUtil;
 import com.discovery.banking.wrapper.ClientCurrencyAccountWrapper;
 import com.discovery.banking.wrapper.ClientTransactionalAccountWrapper;
+import com.discovery.banking.wrapper.DenominationCountValueWrapper;
 import com.discovery.banking.wrapper.WithdrawWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.management.BufferPoolMXBean;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +33,13 @@ public class ClientService {
     ClientRepository clientRepository;
 
     @Autowired
+    ClientAccountRepository clientAccountRepository;
+
+    @Autowired
     AtmService atmService;
+
+    @Autowired
+    DenominationService denominationService;
 
     public List<ClientTransactionalAccountWrapper> displayTransactionalBalances(int clientId){
 
@@ -89,21 +99,24 @@ public class ClientService {
         return convertedAccounts;
     }
 
-    public WithdrawWrapper withdrawMoneyFromTransactionalAccount(int clientId, String withdrawAccount, int atmId, BigDecimal withdrawAmount){
+    public  DenominationCountValueWrapper withdrawMoneyFromTransactionalAccount(int clientId, String withdrawAccount, int atmId, Double withdrawAmount){
 
         Client currentClient = retrieveClient(clientId);
 
         List<AtmAllocation> atmAllocations = atmService.retrieveAtmAllocations(atmId);
-
-
+        List<Integer> denominationValues = denominationService.retrieveNoteDenominationsValues(atmAllocations);
+        List<Integer> atmDenominationCount = denominationService.retrieveATMDenominationCount(atmAllocations);
 
         //retrieves the transactional account used for to withdraw from
         ClientAccount clientAccount = getTransactionalWithdrawAccount(getClientTransactionalAccounts(currentClient), withdrawAccount);
 
+        DenominationCountValueWrapper optimalDenominationValues = CurrencyUtil.determineOptimalDenomination(denominationValues, atmDenominationCount, withdrawAmount);
 
+        clientAccount.setDisplayBalance(clientAccount.getDisplayBalance().subtract(BigDecimal.valueOf(withdrawAmount)));
 
+        clientAccountRepository.save(clientAccount);
 
-
+        return optimalDenominationValues;
     }
 
 
@@ -143,7 +156,7 @@ public class ClientService {
     public ClientAccount getTransactionalWithdrawAccount(List<ClientAccount> clientAccounts, String withdrawAccount){
 
         for (ClientAccount account:clientAccounts) {
-            if(withdrawAccount.equals(account.getAccountType())) {
+            if(withdrawAccount.equals(account.getAccountType().getAccountTypeCode())) {
                 return account;
             }
         }

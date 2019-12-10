@@ -3,6 +3,7 @@ package com.discovery.banking.controller;
 import com.discovery.banking.service.ClientService;
 import com.discovery.banking.wrapper.ClientCurrencyAccountWrapper;
 import com.discovery.banking.wrapper.ClientTransactionalAccountWrapper;
+import com.discovery.banking.wrapper.DenominationCountValueWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,11 +34,11 @@ public class ClientController {
         return ResponseEntity.ok().body(clientService.displayConvertedCurrencyAccountBalances(clientId));
     }
 
-//    @RequestMapping(value = "/withdrawMoneyFromTransactionalAccount")
-//    public ResponseEntity<List<String>> withdrawMoneyFromTransactionalAccount(@RequestParam int clientId, String withdrawAccount, int atmId, BigDecimal withdrawAmount)) {
-//        //todo help
-//        return ResponseEntity.badRequest(clientService.)
-//    }
+    @RequestMapping(value = "/withdrawMoneyFromTransactionalAccount")
+    public ResponseEntity<DenominationCountValueWrapper> withdrawMoneyFromTransactionalAccount(@RequestParam int clientId, @RequestParam String withdrawAccount, @RequestParam int atmId, @RequestParam Double withdrawAmount) {
+        //todo help
+        return ResponseEntity.ok().body(clientService.withdrawMoneyFromTransactionalAccount(clientId, withdrawAccount, atmId, withdrawAmount));
+    }
 
 
 
