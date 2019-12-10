@@ -6,11 +6,12 @@ import com.discovery.banking.entity.Atm;
 import com.discovery.banking.entity.AtmAllocation;
 import com.discovery.banking.entity.Client;
 import com.discovery.banking.entity.ClientAccount;
+import com.discovery.banking.entity.Denomination;
 import com.discovery.banking.utils.CurrencyUtil;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.discovery.banking.wrapper.ClientCurrencyAccountWrapper;
+import com.discovery.banking.wrapper.ClientTransactionalAccountWrapper;
+import com.discovery.banking.wrapper.WithdrawWrapper;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -28,28 +28,41 @@ public class ClientService {
     @Autowired
     ClientRepository clientRepository;
 
-//    @Autowired
-//    AtmService atmService;
+    @Autowired
+    AtmService atmService;
 
-    public List<ClientAccount> displayTransactionalBalances(int clientId){
+    public List<ClientTransactionalAccountWrapper> displayTransactionalBalances(int clientId){
 
         Client currentClient = retrieveClient(clientId);
         List<ClientAccount> clientTransactionalAccounts = getClientTransactionalAccounts(currentClient);
+        List<ClientTransactionalAccountWrapper> transactionalAccounts = new ArrayList<>();
 
-        Comparator<ClientAccount> byDisplayBalance = Comparator.comparing(ClientAccount::getDisplayBalance).reversed();
-        Collections.sort(clientTransactionalAccounts,byDisplayBalance);
+        for (ClientAccount account: clientTransactionalAccounts) {
+            ClientTransactionalAccountWrapper transactionalAccountWrapper = new ClientTransactionalAccountWrapper();
 
-        return clientTransactionalAccounts;
+            transactionalAccountWrapper.setAccountNumber(account.getClientAccountNumber());
+            transactionalAccountWrapper.setAccountBalance(account.getDisplayBalance());
+            transactionalAccountWrapper.setAccountType(account.getAccountType().getDescription());
+
+            transactionalAccounts.add(transactionalAccountWrapper);
+
+        }
+
+        Comparator<ClientTransactionalAccountWrapper> byDisplayBalance = Comparator.comparing(ClientTransactionalAccountWrapper::getAccountBalance).reversed();
+        Collections.sort(transactionalAccounts, byDisplayBalance);
+
+        return transactionalAccounts;
     }
 
-    public List<JSONObject> displayConvertedCurrencyAccountBalances(int clientId) throws JSONException {
+    public List<ClientCurrencyAccountWrapper> displayConvertedCurrencyAccountBalances(int clientId) {
 
         Client currentClient = retrieveClient(clientId);
         List<ClientAccount> clientCurrencyAccounts = getClientCurrencyAccounts(currentClient);
-        List<JSONObject> convertedAccounts = new ArrayList<>();
-        JSONObject entity = new JSONObject();
+        List<ClientCurrencyAccountWrapper> convertedAccounts = new ArrayList<>();
+
         for (ClientAccount account: clientCurrencyAccounts ) {
             String currencyIndicator = account.getCurrency().getCurrencyConversionRate().getConversionIndicator();
+            ClientCurrencyAccountWrapper entity = new ClientCurrencyAccountWrapper();
             log.info("Currency code {}" , currencyIndicator);
 
             BigDecimal rate = account.getCurrency().getCurrencyConversionRate().getRate();
@@ -61,29 +74,37 @@ public class ClientService {
             int decimalPlaces = account.getCurrency().getDecimalPlaces();
             log.info("Currency decimal places {}" , decimalPlaces);
 
-
-            entity.put("accountNumber", account.getClientAccountNumber());
-            entity.put("currency", account.getCurrency().getCurrencyCode());
-            entity.put("currencyBalance", account.getDisplayBalance());
-            entity.put("conversionRate", rate);
-            entity.put("zarAmount", CurrencyUtil.calculateZar(rate, currencyIndicator,value,decimalPlaces));
+            entity.setAccountNumber(account.getClientAccountNumber());
+            entity.setCurrencyCode(account.getCurrency().getCurrencyCode());
+            entity.setCurrencyBalance(account.getDisplayBalance());
+            entity.setConversionRate(rate);
+            entity.setZarAmount(CurrencyUtil.calculateZar(rate, currencyIndicator,value,decimalPlaces));
 
             convertedAccounts.add(entity);
         }
 
-//        Comparator<JSONObject> byDisplayBalance = Comparator.comparing(JSONObject::JSONObject.gett("zarAmount")).reversed();
-//
-//        Comparator<JSONObject> byDisplayBalance = Comparator.comparing(JSONObject::getJSONObject("zarAmount")).reversed();
+        Comparator<ClientCurrencyAccountWrapper> byDisplayBalance = Comparator.comparing(ClientCurrencyAccountWrapper::getZarAmount).reversed();
+        Collections.sort(convertedAccounts, byDisplayBalance);
+
         return convertedAccounts;
     }
 
-//    public int withdrawMoneyFromTransactionalAccount(int clientId, String accountNumber, int atmId){
-//
-//        Client currentClient = retrieveClient(clientId);
-////        AtmAllocation currentAtm = atmService.retrieveAtm(atmId);
-//
-////        currentAtm.getDenomination().
-//    }
+    public WithdrawWrapper withdrawMoneyFromTransactionalAccount(int clientId, String withdrawAccount, int atmId, BigDecimal withdrawAmount){
+
+        Client currentClient = retrieveClient(clientId);
+
+        List<AtmAllocation> atmAllocations = atmService.retrieveAtmAllocations(atmId);
+
+
+
+        //retrieves the transactional account used for to withdraw from
+        ClientAccount clientAccount = getTransactionalWithdrawAccount(getClientTransactionalAccounts(currentClient), withdrawAccount);
+
+
+
+
+
+    }
 
 
     public Client retrieveClient(int clientId){
@@ -117,6 +138,17 @@ public class ClientService {
         }
 
         return clientTransactionalAccounts;
+    }
+
+    public ClientAccount getTransactionalWithdrawAccount(List<ClientAccount> clientAccounts, String withdrawAccount){
+
+        for (ClientAccount account:clientAccounts) {
+            if(withdrawAccount.equals(account.getAccountType())) {
+                return account;
+            }
+        }
+        log.error("Specified account{} was not found", withdrawAccount);
+        return null;
     }
 
 }

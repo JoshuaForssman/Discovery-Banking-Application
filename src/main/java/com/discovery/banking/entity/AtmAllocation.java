@@ -19,10 +19,6 @@ public class AtmAllocation {
     private Integer atmAllocationId;
 
     @ManyToOne
-    @JoinColumn(name = "ATM_ID", nullable = false)
-    private Atm atm;
-
-    @ManyToOne
     @JoinColumn(name = "DENOMINATION_ID", nullable = false)
     private Denomination denomination;
 
