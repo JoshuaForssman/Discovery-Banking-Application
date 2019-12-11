@@ -17,4 +17,6 @@ public class ClientCurrencyAccountWrapper {
 
     private BigDecimal zarAmount;
 
+    private String statusMessage;
+
 }

@@ -16,6 +16,7 @@ import com.discovery.banking.wrapper.DenominationCountValueWrapper;
 import com.discovery.banking.wrapper.WithdrawWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.lang.management.BufferPoolMXBean;
@@ -23,6 +24,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Slf4j
@@ -41,10 +44,13 @@ public class ClientService {
     @Autowired
     DenominationService denominationService;
 
+    @Autowired
+    AccountService accountService;
+
     public List<ClientTransactionalAccountWrapper> displayTransactionalBalances(int clientId){
 
         Client currentClient = retrieveClient(clientId);
-        List<ClientAccount> clientTransactionalAccounts = getClientTransactionalAccounts(currentClient);
+        List<ClientAccount> clientTransactionalAccounts = accountService.getClientTransactionalAccounts(currentClient);
         List<ClientTransactionalAccountWrapper> transactionalAccounts = new ArrayList<>();
 
         for (ClientAccount account: clientTransactionalAccounts) {
@@ -67,7 +73,7 @@ public class ClientService {
     public List<ClientCurrencyAccountWrapper> displayConvertedCurrencyAccountBalances(int clientId) {
 
         Client currentClient = retrieveClient(clientId);
-        List<ClientAccount> clientCurrencyAccounts = getClientCurrencyAccounts(currentClient);
+        List<ClientAccount> clientCurrencyAccounts = accountService.getClientCurrencyAccounts(currentClient);
         List<ClientCurrencyAccountWrapper> convertedAccounts = new ArrayList<>();
 
         for (ClientAccount account: clientCurrencyAccounts ) {
@@ -93,28 +99,49 @@ public class ClientService {
             convertedAccounts.add(entity);
         }
 
-        Comparator<ClientCurrencyAccountWrapper> byDisplayBalance = Comparator.comparing(ClientCurrencyAccountWrapper::getZarAmount).reversed();
+        Comparator<ClientCurrencyAccountWrapper> byDisplayBalance = Comparator.comparing(ClientCurrencyAccountWrapper::getZarAmount);
         Collections.sort(convertedAccounts, byDisplayBalance);
 
         return convertedAccounts;
     }
 
-    public  DenominationCountValueWrapper withdrawMoneyFromTransactionalAccount(int clientId, String withdrawAccount, int atmId, Double withdrawAmount){
+    public DenominationCountValueWrapper withdrawMoneyFromTransactionalAccount(int clientId, String withdrawAccount, int atmId, BigDecimal withdrawAmount){
 
-        Client currentClient = retrieveClient(clientId);
+        DenominationCountValueWrapper optimalDenominationValues = null;
+        try {
+            Client currentClient = retrieveClient(clientId);
 
-        List<AtmAllocation> atmAllocations = atmService.retrieveAtmAllocations(atmId);
-        List<Integer> denominationValues = denominationService.retrieveNoteDenominationsValues(atmAllocations);
-        List<Integer> atmDenominationCount = denominationService.retrieveATMDenominationCount(atmAllocations);
+            List<AtmAllocation> atmAllocations = atmService.retrieveAtmAllocations(atmId);
 
-        //retrieves the transactional account used for to withdraw from
-        ClientAccount clientAccount = getTransactionalWithdrawAccount(getClientTransactionalAccounts(currentClient), withdrawAccount);
+            if(atmAllocations.equals(null)){
+                optimalDenominationValues.setNoteCountHash(null);
+                optimalDenominationValues.setStatusMessage("The system displays an error message “ATM not registered or unfunded”");
+                return optimalDenominationValues;
+            }
 
-        DenominationCountValueWrapper optimalDenominationValues = CurrencyUtil.determineOptimalDenomination(denominationValues, atmDenominationCount, withdrawAmount);
+            LinkedHashMap<BigDecimal, BigDecimal> noteCountPerValue = denominationService.retrieveNoteAmountPerValue(atmAllocations);
 
-        clientAccount.setDisplayBalance(clientAccount.getDisplayBalance().subtract(BigDecimal.valueOf(withdrawAmount)));
+            //retrieves the transactional account used for to withdraw from
+            ClientAccount clientAccount = accountService.getTransactionalWithdrawAccount(accountService.getClientTransactionalAccounts(currentClient), withdrawAccount);
 
-        clientAccountRepository.save(clientAccount);
+            if(withdrawAmount.compareTo(clientAccount.getDisplayBalance()) == 1){
+                optimalDenominationValues.setNoteCountHash(null);
+                optimalDenominationValues.setStatusMessage("Insufficient funds");
+                return optimalDenominationValues;
+            }
+
+            optimalDenominationValues = denominationService.determineOptimalDenomination(noteCountPerValue, withdrawAmount);
+
+            atmService.atmAllocationDenominationUpdate(optimalDenominationValues.getNoteCountHash(), atmAllocations);
+
+            clientAccount.setDisplayBalance(clientAccount.getDisplayBalance().subtract(withdrawAmount));
+
+            clientAccountRepository.save(clientAccount);
+
+            return optimalDenominationValues;
+        }catch (Exception e){
+            log.error(e.getLocalizedMessage());
+        }
 
         return optimalDenominationValues;
     }
@@ -124,44 +151,6 @@ public class ClientService {
 
         Client currentRequestedClient = clientRepository.getOne(clientId);
         return currentRequestedClient;
-    }
-
-
-    public List<ClientAccount> getClientCurrencyAccounts(Client client){
-
-        List<ClientAccount> clientTransactionalAccounts = new ArrayList<>();
-
-        for (ClientAccount account:client.getClientAccounts()) {
-            if(account.getAccountType().getAccountTypeCode().equals(AccountTypeCodeOptions.CFCA.value())){
-                clientTransactionalAccounts.add(account);
-            }
-        }
-
-        return clientTransactionalAccounts;
-    }
-
-    public List<ClientAccount> getClientTransactionalAccounts(Client client){
-
-        List<ClientAccount> clientTransactionalAccounts = new ArrayList<>();
-
-        for (ClientAccount account:client.getClientAccounts()) {
-            if(account.getAccountType().isTransactional()){
-                clientTransactionalAccounts.add(account);
-            }
-        }
-
-        return clientTransactionalAccounts;
-    }
-
-    public ClientAccount getTransactionalWithdrawAccount(List<ClientAccount> clientAccounts, String withdrawAccount){
-
-        for (ClientAccount account:clientAccounts) {
-            if(withdrawAccount.equals(account.getAccountType().getAccountTypeCode())) {
-                return account;
-            }
-        }
-        log.error("Specified account{} was not found", withdrawAccount);
-        return null;
     }
 
 }
