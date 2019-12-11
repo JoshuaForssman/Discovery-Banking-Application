@@ -4,8 +4,6 @@ import com.discovery.banking.dao.SystemRepository;
 import com.discovery.banking.wrapper.SystemClientNetWrapper;
 import com.discovery.banking.wrapper.SystemTransactionalAccountWrapper;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

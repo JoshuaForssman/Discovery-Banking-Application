@@ -6,25 +6,26 @@ import com.discovery.banking.wrapper.SystemTransactionalAccountWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @Slf4j
-@Controller
+@RestController
 @RequestMapping(value = "/system")
 public class SystemController {
 
     @Autowired
     SystemService systemService;
 
-    @RequestMapping(value = "/displayTransactionalBalancesPerClient")
+    @RequestMapping(value = "/displayTransactionalBalancesPerClient", method = RequestMethod.GET)
     public ResponseEntity<List<SystemTransactionalAccountWrapper>> displayTransactionalBalancesPerClient() {
         return ResponseEntity.ok().body(systemService.displayTransactionalBalances());
     }
 
-    @RequestMapping(value = "/displayNetBalancesPerClient")
+    @RequestMapping(value = "/displayNetBalancesPerClient", method = RequestMethod.GET)
     public ResponseEntity<List<SystemClientNetWrapper>> displayNetBalancesPerClient() {
         return ResponseEntity.ok().body(systemService.displayClientNetBalances());
     }
