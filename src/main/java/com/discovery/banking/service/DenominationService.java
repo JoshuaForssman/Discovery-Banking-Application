@@ -3,13 +3,10 @@ package com.discovery.banking.service;
 import com.discovery.banking.entity.AtmAllocation;
 import com.discovery.banking.entity.Notes;
 import com.discovery.banking.wrapper.DenominationCountValueWrapper;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 

@@ -2,29 +2,21 @@ package com.discovery.banking.service;
 
 import com.discovery.banking.dao.ClientAccountRepository;
 import com.discovery.banking.dao.ClientRepository;
-import com.discovery.banking.entity.AccountTypeCodeOptions;
-import com.discovery.banking.entity.Atm;
 import com.discovery.banking.entity.AtmAllocation;
 import com.discovery.banking.entity.Client;
 import com.discovery.banking.entity.ClientAccount;
-import com.discovery.banking.entity.Currency;
-import com.discovery.banking.entity.Denomination;
 import com.discovery.banking.utils.CurrencyUtil;
 import com.discovery.banking.wrapper.ClientCurrencyAccountWrapper;
 import com.discovery.banking.wrapper.ClientTransactionalAccountWrapper;
 import com.discovery.banking.wrapper.DenominationCountValueWrapper;
-import com.discovery.banking.wrapper.WithdrawWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.lang.management.BufferPoolMXBean;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 

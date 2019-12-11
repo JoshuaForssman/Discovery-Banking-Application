@@ -1,6 +1,5 @@
 package com.discovery.banking.dao;
 
-import com.discovery.banking.entity.Client;
 import com.discovery.banking.wrapper.SystemClientNetWrapper;
 import com.discovery.banking.wrapper.SystemTransactionalAccountWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
