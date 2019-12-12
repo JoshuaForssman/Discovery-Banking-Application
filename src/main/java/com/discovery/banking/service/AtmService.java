@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.swing.plaf.PanelUI;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,14 +36,24 @@ public class AtmService {
 
     }
 
-    public void atmAllocationDenominationUpdate(LinkedHashMap<BigDecimal,BigDecimal> denominationValues, List<AtmAllocation> atmAllocations){
+    public Atm retrieveAtm(int atmId){
+        Atm atm = atmRepository.getOne(atmId);
+        return atm;
+    }
 
-        for (AtmAllocation allocation: atmAllocations) {
-            BigDecimal value = (new ArrayList<BigDecimal>(denominationValues.values())).get(allocation.getCount());
-            BigDecimal key = (new ArrayList<BigDecimal>(denominationValues.keySet())).get(allocation.getCount());
+    public void atmAllocationDenominationCountUpdate(LinkedHashMap<BigDecimal,BigDecimal> denominationValues, Atm atm){
+
+
+        int counter = 0;
+        for (AtmAllocation allocation: atm.getAtmAllocations()) {
+            counter = counter++;
+            BigDecimal value = (new ArrayList<BigDecimal>(denominationValues.values())).get(counter);
+            BigDecimal key = (new ArrayList<BigDecimal>(denominationValues.keySet())).get(counter);
             if(allocation.getDenomination().getValue().compareTo(key) == 0){
-                allocation.setCount(value.intValue());
-                atmAllocationRepository.save(allocation);
+                BigDecimal allocationCurrentCount = BigDecimal.valueOf(allocation.getCount());
+                allocationCurrentCount = allocationCurrentCount.subtract(value);
+                allocation.setCount(allocationCurrentCount.intValue());
+                atmRepository.save(atm);
             }
 
         }

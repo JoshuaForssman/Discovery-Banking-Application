@@ -2,6 +2,8 @@ package com.discovery.banking.service;
 
 import com.discovery.banking.dao.ClientAccountRepository;
 import com.discovery.banking.dao.ClientRepository;
+import com.discovery.banking.entity.AccountTypeCodeOptions;
+import com.discovery.banking.entity.Atm;
 import com.discovery.banking.entity.AtmAllocation;
 import com.discovery.banking.entity.Client;
 import com.discovery.banking.entity.ClientAccount;
@@ -103,7 +105,11 @@ public class ClientService {
         try {
             Client currentClient = retrieveClient(clientId);
 
-            List<AtmAllocation> atmAllocations = atmService.retrieveAtmAllocations(atmId);
+            Atm atm = atmService.retrieveAtm(atmId);
+
+            List<AtmAllocation> atmAllocations = atm.getAtmAllocations();
+
+
 
             if(atmAllocations.equals(null)){
                 optimalDenominationValues.setNoteCountHash(null);
@@ -116,15 +122,24 @@ public class ClientService {
             //retrieves the transactional account used for to withdraw from
             ClientAccount clientAccount = accountService.getTransactionalWithdrawAccount(accountService.getClientTransactionalAccounts(currentClient), withdrawAccount);
 
+            //checks that client has enough funds
             if(withdrawAmount.compareTo(clientAccount.getDisplayBalance()) == 1){
                 optimalDenominationValues.setNoteCountHash(null);
                 optimalDenominationValues.setStatusMessage("Insufficient funds");
                 return optimalDenominationValues;
             }
 
+            //checks that if  account is cheque and withdraw amount is less than 10000
+            if(clientAccount.getAccountType().getAccountTypeCode().equals(AccountTypeCodeOptions.CHQ)&& withdrawAmount.compareTo(BigDecimal.valueOf(10000))== 1){
+                optimalDenominationValues.setNoteCountHash(null);
+                optimalDenominationValues.setStatusMessage("Insufficient funds");
+                return optimalDenominationValues;
+            }
+
+
             optimalDenominationValues = denominationService.determineOptimalDenomination(noteCountPerValue, withdrawAmount);
 
-            atmService.atmAllocationDenominationUpdate(optimalDenominationValues.getNoteCountHash(), atmAllocations);
+            atmService.atmAllocationDenominationCountUpdate(optimalDenominationValues.getNoteCountHash(), atm);
 
             clientAccount.setDisplayBalance(clientAccount.getDisplayBalance().subtract(withdrawAmount));
 
